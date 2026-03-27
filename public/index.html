@@ -1,1 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SRKR Food Court — Order on WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0a06;
+  --surface:#141209;
+  --card:#1c1a14;
+  --border:#2a2618;
+  --gold:#f5a623;
+  --gold2:#e8872a;
+  --cream:#f5f0e8;
+  --muted:#8a8070;
+  --text:#f0ebe0;
+  --green:#4caf80;
+  --red:#e05050;
+}
 
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+}
+
+/* ── Noise texture overlay ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:1000;opacity:.4;
+}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.25rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(12,10,6,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-weight:700;
+  color:var(--gold);
+  letter-spacing:-.3px;
+}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-links a{
+  color:var(--muted);font-size:13px;font-weight:500;
+  text-decoration:none;letter-spacing:.3px;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--text);}
+.nav-order{
+  background:var(--gold);color:#0c0a06;
+  padding:.5rem 1.25rem;border-radius:40px;
+  font-size:13px;font-weight:600;
+  text-decoration:none;
+  transition:all .2s;
+  white-space:nowrap;
+}
+.nav-order:hover{background:#f7b84a;transform:translateY(-1px);}
+
+/* ── Hero ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  padding:8rem 2rem 4rem;
+  position:relative;
+  overflow:hidden;
+}
+.hero-glow{
+  position:absolute;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#1c1a14;border:1px solid #2a2618;
+  border-radius:40px;padding:.4rem 1rem;
+  font-size:12px;font-weight:500;color:var(--gold);
+  letter-spacing:.5px;text-transform:uppercase;
+  margin-bottom:1.5rem;
+  animation:fadeUp .6s ease both;
+}
+.hero-tag span{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.hero h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(3rem,8vw,7rem);
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-2px;
+  margin-bottom:1.5rem;
+  animation:fadeUp .7s .1s ease both;
+}
+.hero h1 em{
+  font-style:normal;
+  color:var(--gold);
+  display:block;
+}
+.hero-sub{
+  font-size:clamp(1rem,2vw,1.2rem);
+  color:var(--muted);
+  font-weight:300;
+  max-width:500px;
+  margin:0 auto 2.5rem;
+  line-height:1.7;
+  animation:fadeUp .7s .2s ease both;
+}
+.hero-actions{
+  display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp .7s .3s ease both;
+}
+.btn-whatsapp{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--gold);color:#0c0a06;
+  padding:.85rem 2rem;border-radius:50px;
+  font-size:15px;font-weight:600;
+  text-decoration:none;
+  transition:all .25s;
+  box-shadow:0 8px 30px rgba(245,166,35,.3);
+}
+.btn-whatsapp:hover{background:#f7b84a;transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,166,35,.4);}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;color:var(--text);
+  border:1px solid var(--border);
+  padding:.85rem 2rem;border-radius:50px;
+  font-size:15px;font-weight:500;
+  text-decoration:none;
+  transition:all .2s;
+}
+.btn-ghost:hover{background:var(--card);border-color:#3a3628;}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── Stats bar ── */
+.stats-bar{
+  display:flex;justify-content:center;gap:0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  padding:0;overflow:hidden;
+}
+.stat-item{
+  flex:1;max-width:200px;
+  padding:1.75rem 1.5rem;
+  text-align:center;
+  border-right:1px solid var(--border);
+}
+.stat-item:last-child{border-right:none;}
+.stat-num{
+  font-family:'Playfair Display',serif;
+  font-size:2.5rem;font-weight:700;
+  color:var(--gold);line-height:1;
+  margin-bottom:.25rem;
+}
+.stat-label{font-size:12px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+
+/* ── Section ── */
+section{padding:5rem 2rem;}
+.section-tag{
+  font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:.75rem;
+}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,4vw,3rem);
+  font-weight:700;letter-spacing:-1px;
+  margin-bottom:1rem;
+}
+.section-sub{color:var(--muted);font-size:15px;line-height:1.7;max-width:500px;}
+
+/* ── How it works ── */
+.how{background:var(--surface);}
+.how-inner{max-width:1100px;margin:0 auto;}
+.how-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1.5rem;margin-top:3rem;
+}
+.how-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:2rem;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.how-card:hover{border-color:#3a3628;transform:translateY(-4px);}
+.how-card::before{
+  content:attr(data-num);
+  position:absolute;top:-10px;right:1rem;
+  font-family:'Playfair Display',serif;
+  font-size:5rem;font-weight:900;
+  color:rgba(245,166,35,.06);
+  line-height:1;pointer-events:none;
+}
+.how-icon{font-size:2rem;margin-bottom:1rem;}
+.how-card h3{font-size:16px;font-weight:600;margin-bottom:.5rem;}
+.how-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── Menu categories ── */
+.menu-inner{max-width:1100px;margin:0 auto;}
+.menu-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;flex-wrap:gap;}
+.cat-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:1rem;
+}
+.cat-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1.5rem 1rem;
+  text-align:center;cursor:pointer;
+  transition:all .2s;text-decoration:none;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+}
+.cat-card:hover{border-color:var(--gold);background:#1e1c14;transform:translateY(-3px);}
+.cat-emoji{font-size:2.5rem;}
+.cat-name{font-size:13px;font-weight:600;letter-spacing:.2px;}
+.cat-count{font-size:11px;color:var(--muted);}
+
+/* ── Why us ── */
+.why{background:var(--surface);}
+.why-inner{max-width:1100px;margin:0 auto;}
+.why-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.5rem;margin-top:3rem;
+}
+.why-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:1.75rem;
+  display:flex;gap:1rem;align-items:flex-start;
+  transition:border-color .2s;
+}
+.why-card:hover{border-color:#3a3628;}
+.why-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:#2a2010;color:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.why-card h3{font-size:15px;font-weight:600;margin-bottom:.35rem;}
+.why-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── CTA ── */
+.cta{
+  text-align:center;padding:6rem 2rem;
+  background:linear-gradient(180deg, var(--bg) 0%, #110e06 100%);
+  position:relative;overflow:hidden;
+}
+.cta-glow{
+  position:absolute;
+  width:500px;height:300px;
+  background:radial-gradient(ellipse, rgba(245,166,35,.1) 0%, transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.cta h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,5vw,4rem);
+  font-weight:900;letter-spacing:-1.5px;
+  margin-bottom:1rem;
+}
+.cta h2 em{font-style:normal;color:var(--gold);}
+.cta p{color:var(--muted);font-size:15px;margin-bottom:2.5rem;max-width:400px;margin-left:auto;margin-right:auto;}
+
+/* ── Footer ── */
+footer{
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:3rem 2rem;
+}
+.footer-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:2rem;
+}
+.footer-brand .logo{
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-weight:700;color:var(--gold);
+  margin-bottom:.5rem;
+}
+.footer-brand p{font-size:13px;color:var(--muted);max-width:220px;line-height:1.6;}
+.footer-links h4{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+.footer-links a{
+  display:block;font-size:13px;color:var(--muted);
+  text-decoration:none;margin-bottom:.5rem;
+  transition:color .15s;
+}
+.footer-links a:hover{color:var(--text);}
+.footer-bottom{
+  max-width:1100px;margin:2rem auto 0;
+  padding-top:1.5rem;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:1rem;
+}
+.footer-bottom p{font-size:12px;color:var(--muted);}
+
+/* ── WhatsApp float btn ── */
+.wa-float{
+  position:fixed;bottom:2rem;right:2rem;z-index:200;
+  width:58px;height:58px;border-radius:50%;
+  background:#25d366;
+  display:flex;align-items:center;justify-content:center;
+  text-decoration:none;
+  box-shadow:0 4px 20px rgba(37,211,102,.4);
+  transition:all .2s;
+  animation:float 3s ease-in-out infinite;
+}
+.wa-float:hover{transform:scale(1.1);box-shadow:0 8px 30px rgba(37,211,102,.5);}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+@media(max-width:600px){
+  nav{padding:1rem;}
+  .nav-links{display:none;}
+  .stats-bar{flex-wrap:wrap;}
+  .stat-item{min-width:50%;}
+  .footer-inner{flex-direction:column;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">🍽 SRKR Food Court</div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#menu">Menu</a>
+    <a href="#why">Why us</a>
+  </div>
+  <a class="nav-order" href="https://wa.me/919391714623?text=Hi" target="_blank">Order on WhatsApp →</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div>
+    <div class="hero-tag">
+      <span></span> Now accepting WhatsApp orders
+    </div>
+    <h1>
+      SRKR<br>
+      <em>Food Court</em>
+    </h1>
+    <p class="hero-sub">Fresh food, fast service. Order from 30+ menu items directly on WhatsApp and pay securely online.</p>
+    <div class="hero-actions">
+      <a class="btn-whatsapp" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Order Now — It's Free
+      </a>
+      <a class="btn-ghost" href="#menu">View Menu ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num">30+</div><div class="stat-label">Menu Items</div></div>
+  <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">Categories</div></div>
+  <div class="stat-item"><div class="stat-num">₹110</div><div class="stat-label">Starting from</div></div>
+  <div class="stat-item"><div class="stat-num">5 min</div><div class="stat-label">Order to ready</div></div>
+</div>
+
+<!-- How it works -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="section-tag">Simple process</div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div class="section-title">Order in 3 easy steps</div>
+        <div class="section-sub">No app download needed. Just WhatsApp.</div>
+      </div>
+      <a class="btn-whatsapp" href="https://wa.me/919391714623?text=Hi" target="_blank" style="margin-bottom:.5rem">Start ordering →</a>
+    </div>
+    <div class="how-grid">
+      <div class="how-card" data-num="1">
+        <div class="how-icon">💬</div>
+        <h3>Message us on WhatsApp</h3>
+        <p>Send "Hi" to our WhatsApp number and our bot will greet you with the full menu.</p>
+      </div>
+      <div class="how-card" data-num="2">
+        <div class="how-icon">🍽</div>
+        <h3>Browse & add to cart</h3>
+        <p>Choose from 10 categories — Fried Rice, Noodles, Burgers, Juices and more. Add multiple items.</p>
+      </div>
+      <div class="how-card" data-num="3">
+        <div class="how-icon">💳</div>
+        <h3>Pay securely online</h3>
+        <p>Receive a Razorpay payment link. Pay via UPI, card, or net banking in seconds.</p>
+      </div>
+      <div class="how-card" data-num="4">
+        <div class="how-icon">✅</div>
+        <h3>Pick up your order</h3>
+        <p>Get a confirmation on WhatsApp. Your food will be ready at the counter shortly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Menu -->
+<section id="menu">
+  <div class="menu-inner">
+    <div class="section-tag">What we serve</div>
+    <div class="section-title">Our Menu</div>
+    <div class="section-sub" style="margin-bottom:2.5rem">Fresh food made to order across 10 categories.</div>
+    <div class="cat-grid">
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍚</div>
+        <div class="cat-name">Fried Rice</div>
+        <div class="cat-count">Veg & Non-Veg</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍜</div>
+        <div class="cat-name">Noodles</div>
+        <div class="cat-count">3 varieties</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🥪</div>
+        <div class="cat-name">Sandwich</div>
+        <div class="cat-count">Fresh daily</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍝</div>
+        <div class="cat-name">Maggies</div>
+        <div class="cat-count">Classic & special</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🌯</div>
+        <div class="cat-name">Frankie</div>
+        <div class="cat-count">Spicy wraps</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🧃</div>
+        <div class="cat-name">Juices</div>
+        <div class="cat-count">Fresh squeezed</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍟</div>
+        <div class="cat-name">Snacks</div>
+        <div class="cat-count">Quick bites</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🥤</div>
+        <div class="cat-name">Milkshakes</div>
+        <div class="cat-count">Thick & creamy</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍔</div>
+        <div class="cat-name">Burgers</div>
+        <div class="cat-count">Veg & Chicken</div>
+      </a>
+      <a class="cat-card" href="https://wa.me/919391714623?text=Hi" target="_blank">
+        <div class="cat-emoji">🍹</div>
+        <div class="cat-name">Mocktails</div>
+        <div class="cat-count">Refreshing blends</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Why us -->
+<section class="why" id="why">
+  <div class="why-inner">
+    <div class="section-tag">Why choose us</div>
+    <div class="section-title">Good food, made easy</div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <div>
+          <h3>Fast ordering</h3>
+          <p>Order in under 2 minutes directly on WhatsApp. No app, no signup, no hassle.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔒</div>
+        <div>
+          <h3>Secure payments</h3>
+          <p>All payments processed via Razorpay. Pay with UPI, card, or net banking safely.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🍳</div>
+        <div>
+          <h3>Fresh & hot</h3>
+          <p>Every order is freshly prepared. Food is ready within minutes of your payment.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📍</div>
+        <div>
+          <h3>On campus</h3>
+          <p>Located inside SRKR Engineering College, Bhimavaram. Just walk up and collect.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💰</div>
+        <div>
+          <h3>Affordable prices</h3>
+          <p>Student-friendly pricing starting from ₹110. Great food that doesn't break the bank.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🤖</div>
+        <div>
+          <h3>Smart bot</h3>
+          <p>Our WhatsApp bot guides you through the menu, manages your cart, and confirms orders instantly.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-glow"></div>
+  <h2>Hungry? <em>Order now.</em></h2>
+  <p>Send a WhatsApp message and get your food in minutes.</p>
+  <a class="btn-whatsapp" href="https://wa.me/919391714623?text=Hi" target="_blank" style="font-size:16px;padding:1rem 2.5rem;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    Message us on WhatsApp
+  </a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">🍽 SRKR Food Court</div>
+      <p>Fresh food ordering via WhatsApp. Located at SRKR Engineering College, Bhimavaram, AP.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Policies</h4>
+      <a href="/privacy-policy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms & Conditions</a>
+      <a href="/refund-policy.html">Refund Policy</a>
+    </div>
+    <div class="footer-links">
+      <h4>Contact</h4>
+      <a href="https://wa.me/919391714623" target="_blank">WhatsApp Us</a>
+      <a href="#">SRKR Engineering College</a>
+      <a href="#">Bhimavaram, AP — 534204</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 SRKR Food Court. All rights reserved.</p>
+    <p>Payments powered by Razorpay &nbsp;·&nbsp; Messaging via Twilio</p>
+  </div>
+</footer>
+
+<!-- Floating WhatsApp button -->
+<a class="wa-float" href="https://wa.me/919391714623?text=Hi" target="_blank" title="Order on WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+</a>
+
+</body>
+</html>
